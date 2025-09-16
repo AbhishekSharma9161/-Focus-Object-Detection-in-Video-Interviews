@@ -85,13 +85,31 @@ The backend serves these under `/api` (via Express or Next.js route handlers):
 - Hydration warnings are avoided by rendering the main page as a client component via dynamic import.
 - If your editor reports problems from removed folders (e.g., `web/tsconfig.json`), remove that folder from the workspace and restart the TS server.
 
-## Environment
-Create `.env` at repo root:
+## Environment Setup
+
+⚠️ **Security Notice**: The `.env` file has been removed from version control to protect sensitive credentials.
+
+1. Copy the example environment file:
+```bash
+cp .env.example .env
 ```
-MONGODB_URI=your_connection_string
+
+2. Edit `.env` and add your actual values:
+```bash
+MONGODB_URI=your_mongodb_connection_string_here
 MONGODB_DB=proctor
-PORT=3001
+PING_MESSAGE=ping
+PORT=3000
 ```
+
+3. **Never commit the `.env` file** - it's already included in `.gitignore`
+
+## Deployment
+
+For Netlify deployment, make sure to:
+1. Set environment variables in your Netlify dashboard (not in the `.env` file)
+2. The build should now pass without TypeScript/ESLint errors
+3. Use the provided `netlify.toml` configuration
 
 ## License
 MIT
