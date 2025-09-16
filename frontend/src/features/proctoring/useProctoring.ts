@@ -442,6 +442,71 @@ export function useProctoring(opts: UseProctoringOptions) {
     rafRef.current = requestAnimationFrame(detectLoop);
   }, [detectLoop, loadModels, addEvent, opts.candidateName]);
 
+  const computeCounts = useCallback((): ProctorSummaryCounts => {
+    const counts: ProctorSummaryCounts = {
+      focusLost: 0,
+      absenceEvents: 0,
+      multipleFaces: 0,
+      phoneDetections: 0,
+      bookDetections: 0,
+      deviceDetections: 0,
+    };
+    for (const e of events) {
+      if (e.type === "LOOKING_AWAY") counts.focusLost += 1;
+      if (e.type === "NO_FACE") counts.absenceEvents += 1;
+      // MULTIPLE_FACES events intentionally not counted to avoid unnecessary alerts
+      if (e.type === "PHONE_DETECTED") counts.phoneDetections += 1;
+      if (e.type === "BOOK_DETECTED") counts.bookDetections += 1;
+      if (e.type === "DEVICE_DETECTED") counts.deviceDetections += 1;
+    }
+    return counts;
+  }, [events]);
+
+  const computeIntegrity = useCallback((counts: ProctorSummaryCounts) => {
+    const deductions =
+      counts.focusLost * 5 +
+      counts.absenceEvents * 10 +
+      counts.multipleFaces * 10 +
+      counts.phoneDetections * 15 +
+      counts.bookDetections * 8 +
+      counts.deviceDetections * 10;
+    const score = Math.max(0, 100 - deductions);
+    return score;
+  }, []);
+
+  const generateReport = useCallback(() => {
+    if (startedAt == null) return null;
+    const ended = Date.now();
+    const counts = computeCounts();
+    const integrity = computeIntegrity(counts);
+    const idBase = sessionIdRef.current ?? `${startedAt}-${opts.candidateName.replace(/\s+/g, "_").toLowerCase()}`;
+    const rep: ProctorReport = {
+      id: idBase,
+      candidateName: opts.candidateName,
+      startedAt: new Date(startedAt).toISOString(),
+      endedAt: new Date(ended).toISOString(),
+      durationMs: ended - startedAt,
+      events,
+      counts,
+      integrityScore: integrity,
+    };
+    setReport(rep);
+    return rep;
+  }, [computeCounts, computeIntegrity, events, opts.candidateName, startedAt]);
+
+  const saveReport = useCallback(async () => {
+    const rep = generateReport();
+    if (!rep) return null;
+    const res = await fetch("/api/proctor/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report: rep }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as SaveReportResponse;
+    return data.id;
+  }, [generateReport]);
+
   const stopInterview = useCallback(() => {
     // Stop recording if active
     if (
@@ -516,71 +581,6 @@ export function useProctoring(opts: UseProctoringOptions) {
     // generate a report snapshot at the end of recording so UI can show summary
     const rep = generateReport();
     if (rep) setReport(rep);
-  }, [generateReport]);
-
-  const computeCounts = useCallback((): ProctorSummaryCounts => {
-    const counts: ProctorSummaryCounts = {
-      focusLost: 0,
-      absenceEvents: 0,
-      multipleFaces: 0,
-      phoneDetections: 0,
-      bookDetections: 0,
-      deviceDetections: 0,
-    };
-    for (const e of events) {
-      if (e.type === "LOOKING_AWAY") counts.focusLost += 1;
-      if (e.type === "NO_FACE") counts.absenceEvents += 1;
-      // MULTIPLE_FACES events intentionally not counted to avoid unnecessary alerts
-      if (e.type === "PHONE_DETECTED") counts.phoneDetections += 1;
-      if (e.type === "BOOK_DETECTED") counts.bookDetections += 1;
-      if (e.type === "DEVICE_DETECTED") counts.deviceDetections += 1;
-    }
-    return counts;
-  }, [events]);
-
-  const computeIntegrity = useCallback((counts: ProctorSummaryCounts) => {
-    const deductions =
-      counts.focusLost * 5 +
-      counts.absenceEvents * 10 +
-      counts.multipleFaces * 10 +
-      counts.phoneDetections * 15 +
-      counts.bookDetections * 8 +
-      counts.deviceDetections * 10;
-    const score = Math.max(0, 100 - deductions);
-    return score;
-  }, []);
-
-  const generateReport = useCallback(() => {
-    if (startedAt == null) return null;
-    const ended = Date.now();
-    const counts = computeCounts();
-    const integrity = computeIntegrity(counts);
-    const idBase = sessionIdRef.current ?? `${startedAt}-${opts.candidateName.replace(/\s+/g, "_").toLowerCase()}`;
-    const rep: ProctorReport = {
-      id: idBase,
-      candidateName: opts.candidateName,
-      startedAt: new Date(startedAt).toISOString(),
-      endedAt: new Date(ended).toISOString(),
-      durationMs: ended - startedAt,
-      events,
-      counts,
-      integrityScore: integrity,
-    };
-    setReport(rep);
-    return rep;
-  }, [computeCounts, computeIntegrity, events, opts.candidateName, startedAt]);
-
-  const saveReport = useCallback(async () => {
-    const rep = generateReport();
-    if (!rep) return null;
-    const res = await fetch("/api/proctor/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ report: rep }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as SaveReportResponse;
-    return data.id;
   }, [generateReport]);
 
   useEffect(() => {
