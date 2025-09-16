@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as tf from "@tensorflow/tfjs";
 import type {
   ProctorEvent,
@@ -175,7 +175,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     return offsetX > 0.35 || offsetY > 0.6;
   }, []);
 
-  const suspiciousLabels = new Set([
+  const suspiciousLabels = useMemo(() => new Set([
     "cell phone",
     "cellphone",
     "mobile phone",
@@ -188,7 +188,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     "keyboard",
     "mouse",
     "remote",
-  ]);
+  ]), []);
 
   const mapDetectionType = (label: string): ProctorEventType | null => {
     const l = label.toLowerCase();
@@ -584,11 +584,11 @@ export function useProctoring(opts: UseProctoringOptions) {
   }, [generateReport]);
 
   useEffect(() => {
+    const currentVideo = videoRef.current;
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      const video = videoRef.current;
-      if (video && video.srcObject) {
-        const tracks = (video.srcObject as MediaStream).getTracks();
+      if (currentVideo && currentVideo.srcObject) {
+        const tracks = (currentVideo.srcObject as MediaStream).getTracks();
         tracks.forEach((t) => t.stop());
       }
     };
