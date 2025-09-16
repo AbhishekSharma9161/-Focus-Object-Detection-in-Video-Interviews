@@ -275,7 +275,7 @@ export function useProctoring(opts: UseProctoringOptions) {
             closedEyeSinceRef.current = null;
           }
         }
-      } catch (err) {
+      } catch {
         // ignore
       }
 
@@ -296,7 +296,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     }
 
     // Object detection (run more frequently for faster response)
-    let detections: SuspiciousDetection[] = [];
+    const detections: SuspiciousDetection[] = [];
     if (nowMs - lastObjDetectAtRef.current > 600) {
       lastObjDetectAtRef.current = nowMs;
       const preds = await objModel.detect(video);
@@ -330,7 +330,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     drawOverlay(faces, detections);
 
     rafRef.current = requestAnimationFrame(detectLoop);
-  }, [addEvent, computeLookingAway, drawOverlay, focusStatus]);
+  }, [addEvent, computeLookingAway, drawOverlay, focusStatus, suspiciousLabels]);
 
   const loadModels = useCallback(async () => {
     await tf.ready();
@@ -344,7 +344,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     faceModelRef.current = await blazeface.load();
     // Use a lighter base for faster inference; falls back if unavailable
     try {
-      objectModelRef.current = await cocoSsd.load({ base: "lite_mobilenet_v2" as any });
+      objectModelRef.current = await cocoSsd.load({ base: "lite_mobilenet_v2" as cocoSsd.ModelConfig['base'] });
     } catch {
       objectModelRef.current = await cocoSsd.load({ base: "mobilenet_v2" });
     }
@@ -405,8 +405,8 @@ export function useProctoring(opts: UseProctoringOptions) {
 
     // setup audio analyser for background audio detection
     try {
-      const audioCtx = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as Window & typeof globalThis & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioCtx = new AudioContextClass();
       audioCtxRef.current = audioCtx;
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 2048;
@@ -433,14 +433,14 @@ export function useProctoring(opts: UseProctoringOptions) {
               lastLoudAtRef.current = nowMs;
             }
           }
-        } catch (err) {}
+        } catch {}
       }, 800);
-    } catch (err) {
+    } catch {
       // audio context may be blocked in some browsers
     }
 
     rafRef.current = requestAnimationFrame(detectLoop);
-  }, [detectLoop, loadModels]);
+  }, [detectLoop, loadModels, addEvent, opts.candidateName]);
 
   const stopInterview = useCallback(() => {
     // Stop recording if active
@@ -450,7 +450,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     ) {
       try {
         mediaRecorderRef.current.stop();
-      } catch (err) {}
+      } catch {}
       setIsRecording(false);
     }
 
@@ -471,7 +471,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     if (audioCtxRef.current) {
       try {
         audioCtxRef.current.close();
-      } catch (err) {}
+      } catch {}
       audioCtxRef.current = null;
     }
 
@@ -485,7 +485,7 @@ export function useProctoring(opts: UseProctoringOptions) {
       // persist final report to server (best-effort)
       saveReport().catch(() => {});
     }
-  }, []);
+  }, [generateReport, saveReport]);
 
   const startRecording = useCallback(() => {
     const video = videoRef.current;
@@ -516,7 +516,7 @@ export function useProctoring(opts: UseProctoringOptions) {
     // generate a report snapshot at the end of recording so UI can show summary
     const rep = generateReport();
     if (rep) setReport(rep);
-  }, []);
+  }, [generateReport]);
 
   const computeCounts = useCallback((): ProctorSummaryCounts => {
     const counts: ProctorSummaryCounts = {

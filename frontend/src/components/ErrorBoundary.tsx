@@ -1,18 +1,27 @@
-import React from "react";
+import React, { ErrorInfo, ReactNode } from "react";
 
-export default class ErrorBoundary extends React.Component<any, { hasError: boolean; error: any }>{
-  constructor(props: any) {
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, info: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // You could log to an external service here
-    // console.error(error, info);
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
   render() {

@@ -16,7 +16,6 @@ export default function Index() {
     stopInterview,
     startRecording,
     stopRecording,
-    saveReport,
     generateReport,
     isInterviewRunning,
     isRecording,
