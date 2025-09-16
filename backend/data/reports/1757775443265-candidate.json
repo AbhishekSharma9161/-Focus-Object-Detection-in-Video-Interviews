@@ -1,0 +1,17 @@
+{
+  "id": "1757775443265-candidate",
+  "candidateName": "Candidate",
+  "startedAt": "2025-09-13T14:57:23.265Z",
+  "endedAt": "2025-09-13T14:58:27.178Z",
+  "durationMs": 63913,
+  "events": [],
+  "counts": {
+    "focusLost": 0,
+    "absenceEvents": 0,
+    "multipleFaces": 0,
+    "phoneDetections": 0,
+    "bookDetections": 0,
+    "deviceDetections": 0
+  },
+  "integrityScore": 100
+}

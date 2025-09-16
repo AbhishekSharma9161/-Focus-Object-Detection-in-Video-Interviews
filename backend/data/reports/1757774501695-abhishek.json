@@ -1,0 +1,24 @@
+{
+  "id": "1757774501695-abhishek",
+  "candidateName": "Abhishek",
+  "startedAt": "2025-09-13T14:41:41.695Z",
+  "endedAt": "2025-09-13T14:41:53.209Z",
+  "durationMs": 11514,
+  "events": [
+    {
+      "id": "1757774502922-MULTIPLE_FACES",
+      "type": "MULTIPLE_FACES",
+      "message": "Multiple faces detected (2)",
+      "atMs": 16114
+    }
+  ],
+  "counts": {
+    "focusLost": 0,
+    "absenceEvents": 0,
+    "multipleFaces": 1,
+    "phoneDetections": 0,
+    "bookDetections": 0,
+    "deviceDetections": 0
+  },
+  "integrityScore": 90
+}

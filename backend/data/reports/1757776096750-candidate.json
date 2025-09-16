@@ -1,0 +1,36 @@
+{
+  "id": "1757776096750-candidate",
+  "candidateName": "Candidate",
+  "startedAt": "2025-09-13T15:08:16.750Z",
+  "endedAt": "2025-09-13T15:09:17.032Z",
+  "durationMs": 60282,
+  "events": [
+    {
+      "id": "1757776149854-DROWSINESS",
+      "type": "DROWSINESS",
+      "message": "Eyes appear closed or drowsy",
+      "atMs": 113164
+    },
+    {
+      "id": "1757776149585-DROWSINESS",
+      "type": "DROWSINESS",
+      "message": "Eyes appear closed or drowsy",
+      "atMs": 112895
+    },
+    {
+      "id": "1757776138477-MULTIPLE_FACES",
+      "type": "MULTIPLE_FACES",
+      "message": "Multiple faces detected (2)",
+      "atMs": 101787
+    }
+  ],
+  "counts": {
+    "focusLost": 0,
+    "absenceEvents": 0,
+    "multipleFaces": 1,
+    "phoneDetections": 0,
+    "bookDetections": 0,
+    "deviceDetections": 0
+  },
+  "integrityScore": 90
+}
